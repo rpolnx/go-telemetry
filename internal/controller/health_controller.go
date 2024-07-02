@@ -24,7 +24,6 @@ func (c *healthCheckController) RegisterRoutes(e *gin.Engine) {
 }
 
 func (hc healthCheckController) Get(c *gin.Context) {
-	hc.logger.Info("hey")
 	c.JSON(200, gin.H{"status": hc.svc.Check()})
 }
 

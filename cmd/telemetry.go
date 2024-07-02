@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -18,6 +19,9 @@ func main() {
 
 	cfg := do.MustInvoke[*config.Config](ioc)
 	logger := do.MustInvoke[*logrus.Logger](ioc)
+
+	cleanup := config.InitTracer()
+	defer cleanup(context.Background())
 
 	engine := do.MustInvoke[*server.Server](ioc)
 

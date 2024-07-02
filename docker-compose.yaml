@@ -1,13 +1,28 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  db:
-    image: 'bitnami/postgresql:16.3.0-debian-12-r17'
-    ports:
-      - 5433:5432
+  # db:
+  #   image: 'bitnami/postgresql:16.3.0-debian-12-r17'
+  #   ports:
+  #     - 5433:5432
+  #   environment:
+  #     POSTGRESQL_USERNAME: postgres
+  #     POSTGRESQL_PASSWORD: pass
+  #     POSTGRESQL_MAX_CONNECTIONS: 300
+  zipkin:
+    image: ghcr.io/openzipkin/zipkin-slim:${TAG:-latest}
+    # Environment settings are defined here https://github.com/openzipkin/zipkin/blob/master/zipkin-server/README.md#environment-variables
     environment:
-      POSTGRESQL_USERNAME: postgres
-      POSTGRESQL_PASSWORD: pass
-      POSTGRESQL_MAX_CONNECTIONS: 300
-
-    
+      - STORAGE_TYPE=mem
+      # Point the zipkin at the storage backend
+      # - MYSQL_HOST=mysql
+      # Uncomment to enable self-tracing
+      # - SELF_TRACING_ENABLED=true
+      # Uncomment to increase heap size
+      # - JAVA_OPTS=-Xms128m -Xmx128m -XX:+ExitOnOutOfMemoryError
+    ports:
+      # Port used for the Zipkin UI and HTTP Api
+      - 9412:9411
+    restart: always
+    # Uncomment to enable debug logging
+    # command: --logging.level.zipkin2=DEBUG

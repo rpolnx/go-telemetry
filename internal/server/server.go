@@ -7,6 +7,8 @@ import (
 	"github.com/sirupsen/logrus"
 
 	ginlogrus "github.com/toorop/gin-logrus"
+
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 type Server struct {
@@ -19,7 +21,7 @@ func NewServer(ioc *do.Injector) (*Server, error) {
 
 	r := gin.New()
 
-	r.Use(ginlogrus.Logger(logger), gin.Recovery())
+	r.Use(ginlogrus.Logger(logger), gin.Recovery(), otelgin.Middleware("go-telemetry"))
 
 	return &Server{
 		HttpServer: r,
