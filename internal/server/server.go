@@ -1,38 +1,27 @@
 package server
 
 import (
-	"fmt"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-
+	"github.com/gin-gonic/gin"
 	"github.com/rpolnx/go-telemetry/internal/config"
-	"github.com/rpolnx/go-telemetry/internal/controller"
-	"github.com/rpolnx/go-telemetry/internal/service"
 	"github.com/samber/do"
+	"github.com/sirupsen/logrus"
+
+	ginlogrus "github.com/toorop/gin-logrus"
 )
 
-func GetServer() {
+type Server struct {
+	HttpServer *gin.Engine
+}
 
-	ioc := do.New()
+func NewServer(ioc *do.Injector) (*Server, error) {
+	_ = do.MustInvoke[*config.Config](ioc)
+	logger := do.MustInvoke[*logrus.Logger](ioc)
 
-	do.Provide(ioc, config.NewConfig)
+	r := gin.New()
 
-	do.Provide(ioc, service.NewHealthCheckService)
-	do.Provide(ioc, controller.NewHealthCheckController)
+	r.Use(ginlogrus.Logger(logger), gin.Recovery())
 
-	do.MustInvoke[controller.HealthCheckController](ioc)
-
-	cfg := do.MustInvoke[*config.Config](ioc)
-
-	fmt.Printf("Starting server at port %d", cfg.Port)
-
-	go http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), nil)
-
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
-	<-sigs
-	fmt.Println("killing")
+	return &Server{
+		HttpServer: r,
+	}, nil
 }

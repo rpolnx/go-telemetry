@@ -1,5 +1,7 @@
 package controller
 
+import "github.com/gin-gonic/gin"
+
 type BaseController interface{
-	RegisterRoutes()
+	RegisterRoutes(e *gin.Engine)
 }

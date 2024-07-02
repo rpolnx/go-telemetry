@@ -1,41 +1,41 @@
 package controller
 
 import (
-	"encoding/json"
-	"net/http"
-
+	"github.com/gin-gonic/gin"
 	"github.com/rpolnx/go-telemetry/internal/config"
+	"github.com/rpolnx/go-telemetry/internal/server"
 	"github.com/rpolnx/go-telemetry/internal/service"
 	"github.com/samber/do"
+	"github.com/sirupsen/logrus"
 )
 
 type HealthCheckController interface {
 	BaseController
-	Get(w http.ResponseWriter, r *http.Request)
+	Get(c *gin.Context)
 }
 
 type healthCheckController struct {
-	svc service.HealthCheckService
+	svc    service.HealthCheckService
+	logger *logrus.Logger
 }
 
-func (c *healthCheckController) RegisterRoutes() {
-	http.HandleFunc("/healthcheck", c.Get)
+func (c *healthCheckController) RegisterRoutes(e *gin.Engine) {
+	e.GET("/healthcheck", c.Get)
 }
 
-func (c healthCheckController) Get(w http.ResponseWriter, r *http.Request) {
-	response := map[string]string{"status": c.svc.Check()}
-	resp, _ := json.Marshal(response)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(resp)
+func (hc healthCheckController) Get(c *gin.Context) {
+	hc.logger.Info("hey")
+	c.JSON(200, gin.H{"status": hc.svc.Check()})
 }
 
 func NewHealthCheckController(ioc *do.Injector) (HealthCheckController, error) {
 	healthCheckService := do.MustInvoke[service.HealthCheckService](ioc)
 	_ = do.MustInvoke[*config.Config](ioc)
+	logger := do.MustInvoke[*logrus.Logger](ioc)
+	engine := do.MustInvoke[*server.Server](ioc)
 
-	hc := &healthCheckController{healthCheckService}
-	hc.RegisterRoutes()
+	hc := &healthCheckController{healthCheckService, logger}
+	hc.RegisterRoutes(engine.HttpServer)
 
 	return hc, nil
 }
